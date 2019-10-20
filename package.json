@@ -1,0 +1,16 @@
+{
+  "name": "hindi_omari",
+  "version": "1.0.0",
+  "description": "Hindi Quran Translation by Maulana Azizul Haque Al-Umari",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mohammad Arif",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "officegen": "^0.6.3",
+    "request": "^2.88.0"
+  }
+}
