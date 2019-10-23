@@ -1,113 +1,228 @@
-const request = require('request');
-const cheerio = require('cheerio');
-const officegen = require('officegen')
-const fs = require('fs')
+const request = require("request");
+const cheerio = require("cheerio");
+const officegen = require("officegen");
+const fs = require("fs");
+let count = 1;
 
-const url = 'https://quranenc.com/en/browse/hindi_omari/1';
+const url = "https://quranenc.com/en/browse/hindi_omari/";
 
-request(url, function (error, response, body) {
-  let ayahNo;
-  let transHindi;
-  let tafseerHindi;
-  let ayahArabic;
-  let surahName;
+let $;
+let data = [];
+const headingOptions = {
+  align: "center",
+  border: "dotted",
+  borderSize: 12,
+  borderColor: "88CCFF",
+  font_face: "Devanagari MT",
+  font_size: 20,
+  bold: true
+}
+const paragraphOptions = {
+  align: "left",
+  font_face: "Devanagari MT",
+  font_size: 14
+}
 
-  function msOfficeSetup() {
-    // Officegen calling this function to report errors:
-    docx.on('error', function(err) {
-      console.log(err)
-    })
+fetchUrl();
 
-    // Create a new paragraph for ayah no
-    let ayahObj = docx.createP()
-    ayahObj.options.align = 'left'
-    ayahObj.addText(ayahNo, {
-      font_size: 14
-    })
-
-    // Create a new paragraph for Arabic
-    let arabicObj = docx.createP()
-    arabicObj.options.align = 'center'
-    arabicObj.addText(ayahArabic, {
-      font_size: 14
-    })
-
-    // Create a hindi translation paragraph
-    let transTextObj = docx.createP()
-    transTextObj.options.align = 'left'
-    transTextObj.addText(transHindi, {
-      font_face: 'Devanagari MT', font_size: 14
-    })
-
-    // Create a hindi tafseer paragraph
-    let pObj1 = docx.createP()
-    pObj1.options.align = 'left'
-    pObj1.addText(tafseerHindi, {
-      color: '000088', font_face: 'Devanagari MT', font_size: 14
-    })
+function fetchUrl() {
+  if(count > 114) {
+    saveDataToWord()
+  } else {
+    request(`${url}${count}`, function(error, response, body) {
+      if (response && response.statusCode == 200) {
+        scrapData();
+      }
+    });
   }
+}
 
-  function getTheDataFromQuranEnc () {
-    $('.panel-aya').each(function( index, elm ){
-      ayahNo = $(elm).find('.panel-title a').text().trim()
-      ayahArabic = $(elm).find('.aya_text').text().trim()
-      transHindi = $(elm).find('.panel-body .trans_text .ttc').text().trim()
-      tafseerHindi = $(elm).find('.panel-body .hamesh').text().trim()
-      console.log(ayahArabic, transHindi, tafseerHindi)
+function scrapData() {
+  let $ = cheerio.load(body);
+  getSurahNamePara();
+  getTheDataFromQuranEnc();
 
-      msOfficeSetup()
-    })
-  }
+  count++;
+  fetchUrl();
+}
 
-  function surahNamePara() {
-    surahName = $('.toggle-content h4').text()
+function saveDataToWord() {
+  const docx = officegen("docx");
 
-    let hObj = docx.createP()
-    hObj.options.align = 'center'
-    hObj.addText(surahName, 
-      {
-        border: 'dotted',
-        borderSize: 12,
-        borderColor: '88CCFF',
-        font_face: 'Devanagari MT', 
-        font_size: 20,
-        bold: true
-      })
-  }
-  
-  // Create an empty Word object:
-  let docx = officegen('docx')
-  //console.log('error:', error); // Print the error if one occurred
-  //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+  docx.on("error", function(err) {
+    console.log(err);
+  });
 
+  let hObj = docx.createP();
+
+  data.map(({
+    title, options
+  }) => hObj.addText(title, options));
+
+  let out = fs.createWriteStream("QuranHindiScraping.docx");
+
+  out.on("error", function(err) {
+    console.log(err);
+  });
+
+  docx.on("finalize", function(written) {
+    console.log("Finish to create a Microsoft Word document.");
+  });
+
+  // Async call to generate the output file:
+  docx.generate(out);
+  console.log("Scraping done...");
+}
+
+function getSurahNamePara() {
+  data.push({
+    text: $(".toggle-content h4").text(),
+    options: headingOptions
+  );
+}
+
+function getTheDataFromQuranEnc() {
+  $(".panel-aya").each(function(index, elm) {
+    data.push({
+      text: $(elm)
+      .find(".panel-title a")
+      .text()
+      .trim()
+      options: paragraphOptions
+    });
+    data.push($(elm)
+      .find(".aya_text")
+      .text()
+      .trim());
+    data.push($(elm)
+      .find(".panel-body .trans_text .ttc")
+      .text()
+      .trim());
+    data.push($(elm)
+      .find(".panel-body .hamesh")
+      .text()
+      .trim());
+    //console.log(ayahArabic, transHindi, tafseerHindi);
+
+    //msOfficeSetup();
+  });
+}
+
+/*request(url, function(error, response, body) {
+  console.log("Error", error);
   if (response && response.statusCode == 200) {
+    let ayahNo;
+    let transHindi;
+    let tafseerHindi;
+    let ayahArabic;
+    let surahName;
+
+    console.log(body);
+    // Create an empty Word object:
+    const docx = officegen("docx");
     //console.log('body:', responseBody); // Print the HTML for the Google homepage.
-    var $ = cheerio.load(body)
+    let $ = cheerio.load(error);
 
     //Surah Name
-    surahNamePara()
-    
+    surahNamePara();
+
     //Get the data scriping from Quranenc
-    getTheDataFromQuranEnc()
+    getTheDataFromQuranEnc();
 
     //console.log(transHindi, tafseerHindi)
 
     // Let's generate the Word document into a file:
-    let out = fs.createWriteStream('QuranHindiScraping.docx')
+    let out = fs.createWriteStream("QuranHindiScraping.docx");
 
-    out.on('error', function(err) {
-      console.log(err)
-    })
+    out.on("error", function(err) {
+      console.log(err);
+    });
 
     // Officegen calling this function after finishing to generate the docx document:
-    docx.on('finalize', function(written) {
-      console.log(
-        'Finish to create a Microsoft Word document.'
-      )
-    })
+    docx.on("finalize", function(written) {
+      console.log("Finish to create a Microsoft Word document.");
+    });
 
     // Async call to generate the output file:
-    docx.generate(out)
-    console.log("Scraping done...")
+    docx.generate(out);
+    console.log("Scraping done...");
+
+    function msOfficeSetup() {
+      // Officegen calling this function to report errors:
+      docx.on("error", function(err) {
+        console.log(err);
+      });
+
+      // Create a new paragraph for ayah no
+      let ayahObj = docx.createP();
+      ayahObj.options.align = "left";
+      ayahObj.addText(ayahNo, {
+        font_size: 14
+      });
+
+      // Create a new paragraph for Arabic
+      let arabicObj = docx.createP();
+      arabicObj.options.align = "center";
+      arabicObj.addText(ayahArabic, {
+        font_size: 14
+      });
+
+      // Create a hindi translation paragraph
+      let transTextObj = docx.createP();
+      transTextObj.options.align = "left";
+      transTextObj.addText(transHindi, {
+        font_face: "Devanagari MT",
+        font_size: 14
+      });
+
+      // Create a hindi tafseer paragraph
+      let pObj1 = docx.createP();
+      pObj1.options.align = "left";
+      pObj1.addText(tafseerHindi, {
+        color: "000088",
+        font_face: "Devanagari MT",
+        font_size: 14
+      });
+    }
+
+    function getTheDataFromQuranEnc() {
+      $(".panel-aya").each(function(index, elm) {
+        ayahNo = $(elm)
+          .find(".panel-title a")
+          .text()
+          .trim();
+        ayahArabic = $(elm)
+          .find(".aya_text")
+          .text()
+          .trim();
+        transHindi = $(elm)
+          .find(".panel-body .trans_text .ttc")
+          .text()
+          .trim();
+        tafseerHindi = $(elm)
+          .find(".panel-body .hamesh")
+          .text()
+          .trim();
+        console.log(ayahArabic, transHindi, tafseerHindi);
+
+        msOfficeSetup();
+      });
+    }
+
+    function surahNamePara() {
+      surahName = $(".toggle-content h4").text();
+
+      let hObj = docx.createP();
+      hObj.options.align = "center";
+      hObj.addText(surahName, {
+        border: "dotted",
+        borderSize: 12,
+        borderColor: "88CCFF",
+        font_face: "Devanagari MT",
+        font_size: 20,
+        bold: true
+      });
+    }
   }
 });
+*/
