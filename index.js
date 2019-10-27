@@ -16,31 +16,32 @@ const headingOptions = {
   font_face: "Devanagari MT",
   font_size: 20,
   bold: true
-}
+};
 const paragraphOptions = {
   align: "left",
   font_face: "Devanagari MT",
   font_size: 14
-}
+};
 
 fetchUrl();
 
 function fetchUrl() {
-  if(count > 114) {
-    saveDataToWord()
+  if (count > 1) {
+    saveDataToWord();
   } else {
     request(`${url}${count}`, function(error, response, body) {
       if (response && response.statusCode == 200) {
-        scrapData();
+        scrapData(body);
       }
     });
   }
 }
 
-function scrapData() {
+function scrapData(body) {
   let $ = cheerio.load(body);
-  getSurahNamePara();
-  getTheDataFromQuranEnc();
+
+  getSurahNamePara($);
+  getTheDataFromQuranEnc($);
 
   count++;
   fetchUrl();
@@ -55,9 +56,10 @@ function saveDataToWord() {
 
   let hObj = docx.createP();
 
-  data.map(({
-    title, options
-  }) => hObj.addText(title, options));
+  data.map(({ text, options }) => {
+    console.log("options", options);
+    hObj.addText(text, options);
+  });
 
   let out = fs.createWriteStream("QuranHindiScraping.docx");
 
@@ -74,37 +76,50 @@ function saveDataToWord() {
   console.log("Scraping done...");
 }
 
-function getSurahNamePara() {
+function getSurahNamePara($) {
   data.push({
     text: $(".toggle-content h4").text(),
     options: headingOptions
-  );
+  });
 }
 
-function getTheDataFromQuranEnc() {
+function getTheDataFromQuranEnc($) {
   $(".panel-aya").each(function(index, elm) {
+    //Get the ayah & no
     data.push({
       text: $(elm)
-      .find(".panel-title a")
-      .text()
-      .trim()
+        .find(".panel-title a")
+        .text()
+        .trim(),
       options: paragraphOptions
     });
-    data.push($(elm)
-      .find(".aya_text")
-      .text()
-      .trim());
-    data.push($(elm)
-      .find(".panel-body .trans_text .ttc")
-      .text()
-      .trim());
-    data.push($(elm)
-      .find(".panel-body .hamesh")
-      .text()
-      .trim());
-    //console.log(ayahArabic, transHindi, tafseerHindi);
 
-    //msOfficeSetup();
+    //Get the arabic ayah text
+    data.push({
+      text: $(elm)
+        .find(".aya_text")
+        .text()
+        .trim(),
+      options: paragraphOptions
+    });
+
+    //Get the Hindi translation
+    data.push({
+      text: $(elm)
+        .find(".panel-body .trans_text .ttc")
+        .text()
+        .trim(),
+      options: paragraphOptions
+    });
+
+    //Get the Hindi Tafseer
+    data.push({
+      text: $(elm)
+        .find(".panel-body .hamesh")
+        .text()
+        .trim(),
+      options: paragraphOptions
+    });
   });
 }
 
