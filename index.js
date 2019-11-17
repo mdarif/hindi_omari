@@ -10,16 +10,23 @@ const url = 'https://quranenc.com/en/browse/hindi_omari/'
 let $
 let data = []
 let hObj
+let isArabicAyah = false
+
 const headingOptions = {
-  border: 'single',
-  borderSize: 24,
-  borderColor: '88CCFF',
+  align: 'center',
   font_face: 'Devanagari MT',
-  font_size: 15,
+  font_size: 20,
   bold: false,
 }
 const paragraphOptions = {
-  align: 'left',
+  align: 'right',
+  font_face: 'Devanagari MT',
+  font_size: 14,
+}
+
+const paragraphHameshOptions = {
+  align: 'right',
+  color: '000088',
   font_face: 'Devanagari MT',
   font_size: 14,
 }
@@ -54,7 +61,7 @@ function saveDataToWord() {
 
   data.map(({ text, options }) => {
     hObj = docx.createP()
-    console.log('text', text, 'options', options)
+    //console.log('text', text, 'options', options)
     hObj.addText(text, options)
   })
 
@@ -91,14 +98,16 @@ function getTheDataFromQuranEnc() {
       options: paragraphOptions,
     })
 
-    //Get the arabic ayah text
-    data.push({
-      text: $(elm)
-        .find('.aya_text')
-        .text()
-        .trim(),
-      options: paragraphOptions,
-    })
+    if (isArabicAyah) {
+      //Get the arabic ayah text
+      data.push({
+        text: $(elm)
+          .find('.aya_text')
+          .text()
+          .trim(),
+        options: paragraphOptions,
+      })
+    }
 
     //Get the Hindi translation
     data.push({
@@ -109,13 +118,13 @@ function getTheDataFromQuranEnc() {
       options: paragraphOptions,
     })
 
-    //Get the Hindi Tafseer
+    //Get the Hindi Hamesh
     data.push({
       text: $(elm)
         .find('.panel-body .hamesh')
         .text()
         .trim(),
-      options: paragraphOptions,
+      options: paragraphHameshOptions,
     })
   })
 }
