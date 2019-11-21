@@ -7,16 +7,18 @@ let count = 1
 
 const url = 'https://quranenc.com/en/browse/hindi_omari/'
 
-let $
-let data = []
-let hObj
-let isArabicAyah = false
+let $,
+  data = [],
+  hObj,
+  isArabicAyah = false,
+  isHamesh = false,
+  IsAyaNo = false,
+  transHindi
 
 const headingOptions = {
-  align: 'center',
+  align: 'left',
   font_face: 'Devanagari MT',
   font_size: 20,
-  bold: false,
 }
 const paragraphOptions = {
   align: 'right',
@@ -59,9 +61,9 @@ function saveDataToWord() {
     console.log(err)
   })
 
-  data.map(({ text, options }) => {
+  data.map(({ text, options }, index) => {
     hObj = docx.createP()
-    //console.log('text', text, 'options', options)
+    //console.log('text', text, 'options', options, 'index', index)
     hObj.addText(text, options)
   })
 
@@ -90,13 +92,15 @@ function getSurahNamePara() {
 function getTheDataFromQuranEnc() {
   $('.panel-aya').each(function(index, elm) {
     //Get the ayah & no
-    data.push({
-      text: $(elm)
-        .find('.panel-title a')
-        .text()
-        .trim(),
-      options: paragraphOptions,
-    })
+    if (IsAyaNo) {
+      data.push({
+        text: $(elm)
+          .find('.panel-title a')
+          .text()
+          .trim(),
+        options: paragraphOptions,
+      })
+    }
 
     if (isArabicAyah) {
       //Get the arabic ayah text
@@ -110,21 +114,26 @@ function getTheDataFromQuranEnc() {
     }
 
     //Get the Hindi translation
+    let transHindi = $(elm)
+      .find('.panel-body .trans_text .ttc')
+      .text()
+      .trim()
+    transHindi =
+      'Ayah$' + (index + 1) + ':$' + transHindi.replace(/ *\[[^\]]*]/g, '')
     data.push({
-      text: $(elm)
-        .find('.panel-body .trans_text .ttc')
-        .text()
-        .trim(),
+      text: transHindi,
       options: paragraphOptions,
     })
 
     //Get the Hindi Hamesh
-    data.push({
-      text: $(elm)
-        .find('.panel-body .hamesh')
-        .text()
-        .trim(),
-      options: paragraphHameshOptions,
-    })
+    if (isHamesh) {
+      data.push({
+        text: $(elm)
+          .find('.panel-body .hamesh')
+          .text()
+          .trim(),
+        options: paragraphHameshOptions,
+      })
+    }
   })
 }
