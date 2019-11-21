@@ -17,19 +17,19 @@ let $,
 
 const headingOptions = {
   align: 'left',
-  font_face: 'Devanagari MT',
+  font_face: 'Mangal',
   font_size: 20,
 }
 const paragraphOptions = {
   align: 'right',
-  font_face: 'Devanagari MT',
+  font_face: 'Mangal',
   font_size: 14,
 }
 
 const paragraphHameshOptions = {
   align: 'right',
   color: '000088',
-  font_face: 'Devanagari MT',
+  font_face: 'Mangal',
   font_size: 14,
 }
 
@@ -119,7 +119,7 @@ function getTheDataFromQuranEnc() {
       .text()
       .trim()
     transHindi =
-      'Ayah$' + (index + 1) + ':$' + transHindi.replace(/ *\[[^\]]*]/g, '')
+      'Ayah ' + (index + 1) + '$:$' + transHindi.replace(/ *\[[^\]]*]/g, '')
     data.push({
       text: transHindi,
       options: paragraphOptions,
