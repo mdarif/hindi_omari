@@ -20,16 +20,20 @@ const headingOptions = {
   font_face: 'Mangal',
   font_size: 20,
 }
-const paragraphOptions = {
+const paragraphOptionsAyaNo = {
   align: 'right',
-  font_face: 'Mangal',
+  font_face: 'Arial',
   font_size: 14,
 }
-
+const paragraphOptions = {
+  align: 'right',
+  font_face: 'Walkman-Chanakya-901 Normal',
+  font_size: 14,
+}
 const paragraphHameshOptions = {
   align: 'right',
   color: '000088',
-  font_face: 'Mangal',
+  font_face: 'Walkman-Chanakya-901 Normal',
   font_size: 14,
 }
 
@@ -98,7 +102,7 @@ function getTheDataFromQuranEnc() {
           .find('.panel-title a')
           .text()
           .trim(),
-        options: paragraphOptions,
+        options: paragraphOptionsAyaNo,
       })
     }
 
@@ -118,8 +122,7 @@ function getTheDataFromQuranEnc() {
       .find('.panel-body .trans_text .ttc')
       .text()
       .trim()
-    transHindi =
-      'Ayah ' + (index + 1) + '$:$' + transHindi.replace(/ *\[[^\]]*]/g, '')
+    transHindi = index + 1 + ') ' + transHindi.replace(/ *\[[^\]]*]/g, '')
     data.push({
       text: transHindi,
       options: paragraphOptions,
